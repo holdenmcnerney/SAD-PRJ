@@ -149,7 +149,8 @@ def _set_seed(self, seed: Optional[int]):
     self.rng = rng
 
 def gen_params(g=10.0, batch_size=None) -> TensorDictBase:
-    """Returns a ``tensordict`` containing the physical parameters such as gravitational force and torque or speed limits."""
+    """Returns a ``tensordict`` containing the physical parameters such as 
+    gravitational force and torque or speed limits."""
     if batch_size is None:
         batch_size = []
     td = TensorDict(
@@ -215,8 +216,6 @@ def simple_rollout(steps=100):
         data[i] = _data
         _data = step_mdp(_data, keep_other=True)
     return data
-
-batch_size = 10  # number of environments to be executed in batch
 
 env = TransformedEnv(
     env,

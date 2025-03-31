@@ -30,8 +30,8 @@ def _step(tensordict):
     omega = torch.transpose(omega, 0, 1)
     M = torch.transpose(M, 0, 1)
     q_d = torch.transpose(q_d, 0, 1)
-    costs = -(norm(q - q_d) + a_1*norm(q_dot) \
-                          + a_2*norm(M))
+    costs = norm(q - q_d) + a_1*norm(q_dot) \
+                          + a_2*norm(M)
     
     I = torch.tensor(([Ixx, 0, 0], [0, Iyy, 0], [0, 0, Izz]), 
                      dtype=torch.float32, device='cuda:0')
@@ -185,9 +185,9 @@ def gen_params(batch_size=None) -> TensorDictBase:
             "params": TensorDict(
                 {
                     "max_q": 1,
-                    "max_q_dot": 1,
+                    "max_q_dot": 2,
                     "max_omega": 0.5,
-                    "max_moment": 0.005,
+                    "max_moment": 0.05,
                     "a_1": 0.01,
                     "a_2": 0.001,
                     "Ixx": 30,

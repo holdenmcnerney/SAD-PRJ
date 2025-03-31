@@ -1,0 +1,18 @@
+    # size = list(tensordict.size())[0]
+    # # Randomly start the simulation values. Starting with small angles
+    # q = torch.cat(torch.zeros(4, size, dtype=torch.float32), 
+    #               torch.ones(4, size, dtype=torch.float32), dim=0)
+    # q_dot = torch.zeros(4, size, dtype=torch.float32)
+    # omega = torch.zeros(3, size, dtype=torch.float32)
+
+    # rot_axis = torch.rand(3, size, generator=self.rng, device=self.device)
+    # rot_axis = torch.nn.functional.normalize(rot_axis, dim=0)
+    # theta = torch.rand(1, size, generator=self.rng, device=self.device)
+    # # THETA_LIM is set to 10 degrees to start
+    # theta = theta * THETA_LIM
+    # q_d_1_3 = torch.tensor(([rot_axis[0, :]*torch.sin(theta/2)], 
+    #                         [rot_axis[1, :]*torch.sin(theta/2)], 
+    #                         [rot_axis[2, :]*torch.sin(theta/2)]), 
+    #                         dtype=torch.float32)
+    # q_d_4 = torch.tensor(([torch.cos(theta[:]/2)]), dtype=torch.float32).view(1, 1)
+    # q_d = torch.cat((q_d_1_3, q_d_4), 0) 

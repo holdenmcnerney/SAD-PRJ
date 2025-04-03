@@ -52,50 +52,6 @@ def plot(logs):
     plt.title("Max step count (test)")
     plt.show()
 
-def training(env):
-    torch.manual_seed(0)
-    env.set_seed(0)
-
-    net = nn.Sequential(
-        nn.LazyLinear(64),
-        nn.Tanh(),
-        nn.LazyLinear(64),
-        nn.Tanh(),
-        nn.LazyLinear(64),
-        nn.Tanh(),
-        nn.LazyLinear(3),
-    )
-    policy = TensorDictModule(
-        net,
-        in_keys=["observation"],
-        out_keys=["action"],
-    )
-    optim = torch.optim.Adam(policy.parameters(), lr=2e-3)
-    # batch_size = 32
-    pbar = tqdm.tqdm(range(200))
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, 200)
-    logs = defaultdict(list)
-
-    for _ in pbar:
-        init_td = env.reset(env.gen_params())
-        rollout = env.rollout(100, policy, tensordict=init_td, auto_reset=False)
-        traj_return = rollout["next", "reward"].mean()
-        (-traj_return).backward()
-        gn = torch.nn.utils.clip_grad_norm_(net.parameters(), 1.0)
-        optim.step()
-        optim.zero_grad()
-        pbar.set_description(
-            f"reward: {traj_return: 4.4f}, "
-            f"last reward: {rollout[..., -1]['next', 'reward'].mean(): 4.4f}, \
-              gradient norm: {gn: 4.4}"
-        )
-        logs["return"].append(traj_return.item())
-        logs["last_reward"].append(rollout[..., -1]["next", "reward"].mean().item())
-        scheduler.step()
-
-    plot(logs)
-    return rollout
-
 def main():
 
     is_fork = multiprocessing.get_start_method() == "fork"

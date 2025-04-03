@@ -59,7 +59,13 @@ def _step(tensordict):
     new_q = torch.nn.functional.normalize(new_q, dim=0)
 
     reward = -costs.view(*tensordict.shape, 1)
-    done = torch.zeros_like(reward, dtype=torch.bool)
+    # done = torch.zeros_like(reward, dtype=torch.bool)
+
+    done = torch.tensor([True], device='cuda:0') if norm(omega) > 2 else torch.tensor([False], device='cuda:0') 
+
+    if norm(omega) > 2:
+
+        pass
 
     new_q = torch.transpose(new_q, 0, 1)
     new_q_dot = torch.transpose(new_q_dot, 0, 1)
@@ -80,7 +86,7 @@ def _step(tensordict):
     return out
 
 def _reset(self, tensordict):
-    if tensordict is None or tensordict.is_empty():
+    if tensordict is None or tensordict.is_empty() or bool(tensordict["_reset"]) is True:
         tensordict = self.gen_params(batch_size=self.batch_size)
 
     # Randomly start the simulation values. Starting with small angles

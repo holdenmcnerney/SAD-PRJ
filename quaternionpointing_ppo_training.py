@@ -4,7 +4,6 @@ from torch import multiprocessing
 
 from collections import defaultdict
 
-import matplotlib.pyplot as plt
 import torch
 from tensordict.nn import TensorDictModule
 from tensordict.nn.distributions import NormalParamExtractor
@@ -161,12 +160,12 @@ def QuaternionPointingTraining(env):
         logs["reward"].append(tensordict_data["next", "reward"].mean().item())
         pbar.update(tensordict_data.numel())
         cum_reward_str = (
-            f"average reward={logs['reward'][-1]: 4.4f} (init={logs['reward'][0]: 4.4f})"
+            f"avg reward={logs['reward'][-1]: 4.4f} (init={logs['reward'][0]: 4.4f})"
         )
         logs["step_count"].append(tensordict_data["step_count"].max().item())
-        stepcount_str = f"step count (max): {logs['step_count'][-1]}"
+        stepcount_str = f"count (max): {logs['step_count'][-1]}"
         logs["lr"].append(optim.param_groups[0]["lr"])
-        lr_str = f"lr policy: {logs['lr'][-1]: 4.4f}"
+        # lr_str = f"lr policy: {logs['lr'][-1]: 4.4f}"
         if i % 10 == 0:
             # We evaluate the policy once every 10 batches of data.
             # Evaluation is rather simple: execute the policy without exploration
@@ -183,12 +182,14 @@ def QuaternionPointingTraining(env):
                 )
                 logs["eval step_count"].append(eval_rollout["step_count"].max().item())
                 eval_str = (
-                    f"eval cumulative reward: {logs['eval reward (sum)'][-1]: 4.4f} "
+                    f"eval cum reward: {logs['eval reward (sum)'][-1]: 4.4f} "
                     f"(init: {logs['eval reward (sum)'][0]: 4.4f}), "
-                    f"eval step-count: {logs['eval step_count'][-1]}"
+                    f"eval count: {logs['eval step_count'][-1]}"
                 )
+                logs["q"].append(eval_rollout["q"])
+                logs["q_d"].append(eval_rollout["q_d"])
                 del eval_rollout
-        pbar.set_description(", ".join([eval_str, cum_reward_str, stepcount_str, lr_str]))
+        pbar.set_description(", ".join([eval_str, cum_reward_str, stepcount_str]))
 
         # We're also using a learning rate scheduler. Like the gradient clipping,
         # this is a nice-to-have but nothing necessary for PPO to work.

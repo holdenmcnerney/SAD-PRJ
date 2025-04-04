@@ -3,16 +3,12 @@
 from quaternionpointing_env import QuaternionPointingEnv
 from quaternionpointing_ppo_training import QuaternionPointingTraining
 
-from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 
 import torch
-from torch import nn
 from torch import multiprocessing
-import tqdm
-from tensordict import TensorDict, TensorDictBase
-from tensordict.nn import TensorDictModule
+from tensordict import TensorDict
 
 from torchrl.envs import (
     CatTensors,
@@ -75,7 +71,16 @@ def main():
 
     logs = QuaternionPointingTraining(env)
 
-    plot(logs)
+    q = np.squeeze(np.array(logs["q"][0].cpu()), axis=(1,))
+    q_d = np.squeeze(np.array(logs["q_d"][0].cpu()), axis=(1,))
+
+    plt.plot(q[:,0] - q_d[:,0], label='q0')
+    plt.plot(q[:,1] - q_d[:,1], label='q1')
+    plt.plot(q[:,2] - q_d[:,2], label='q2')
+    plt.plot(q[:,3] - q_d[:,3], label='q3')
+    plt.legend()
+    plt.show()
+    # plot(logs)
 
     return 0
 

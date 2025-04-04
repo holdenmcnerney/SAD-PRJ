@@ -18,7 +18,8 @@ def _step(tensordict):
     '''
     q, q_dot, omega = tensordict["q"], tensordict["q_dot"], tensordict["omega"]
     q_d = tensordict["q_d"]
-    a_1, a_2 = tensordict["params", "a_1"], tensordict["params", "a_2"]
+    a_1, a_2, a_3 = tensordict["params", "a_1"], tensordict["params", "a_2"], \
+                    tensordict["params", "a_2"]
     Ixx = tensordict["params", "Ixx"]
     Iyy = tensordict["params", "Iyy"]
     Izz = tensordict["params", "Izz"]
@@ -30,8 +31,9 @@ def _step(tensordict):
     omega = torch.transpose(omega, 0, 1)
     M = torch.transpose(M, 0, 1)
     q_d = torch.transpose(q_d, 0, 1)
-    costs = norm(q - q_d) + a_1*norm(q_dot) \
-                          + a_2*norm(M)
+    costs = norm(q - q_d)**2 + a_1*norm(q_dot) \
+                             + a_2*norm(M) \
+                             + a_3*norm(omega)
     
     I = torch.tensor(([Ixx, 0, 0], [0, Iyy, 0], [0, 0, Izz]), 
                      dtype=torch.float32, device='cuda:0')
@@ -58,14 +60,12 @@ def _step(tensordict):
     new_q = q + new_q_dot*dt
     new_q = torch.nn.functional.normalize(new_q, dim=0)
 
-    reward = -costs.view(*tensordict.shape, 1)
+    if 2*np.arccos(sum(q.cpu()*q_d.cpu())) < np.pi/180: 
+        reward = -costs.view(*tensordict.shape, 1) + 5
+    else:
+        reward = -costs.view(*tensordict.shape, 1)
     # done = torch.zeros_like(reward, dtype=torch.bool)
-
     done = torch.tensor([True], device='cuda:0') if norm(omega) > 2 else torch.tensor([False], device='cuda:0') 
-
-    if norm(omega) > 2:
-
-        pass
 
     new_q = torch.transpose(new_q, 0, 1)
     new_q_dot = torch.transpose(new_q_dot, 0, 1)
@@ -194,8 +194,9 @@ def gen_params(batch_size=None) -> TensorDictBase:
                     "max_q_dot": 2,
                     "max_omega": 0.5,
                     "max_moment": 0.05,
-                    "a_1": 0.01,
-                    "a_2": 0.001,
+                    "a_1": 0.1,
+                    "a_2": 0.1,
+                    "a_3": 0.1,
                     "Ixx": 30,
                     "Iyy": 30,
                     "Izz": 10,

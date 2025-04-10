@@ -31,9 +31,9 @@ def _step(tensordict):
     omega = torch.transpose(omega, 0, 1)
     M = torch.transpose(M, 0, 1)
     q_d = torch.transpose(q_d, 0, 1)
-    costs = norm(q - q_d)**2 + a_1*norm(q_dot) \
-                             + a_2*norm(M) \
-                             + a_3*norm(omega)
+    costs = 10*norm(q - q_d)**2 + a_1*norm(q_dot)**2 \
+                                + a_2*norm(M)**2 \
+                                + a_3*norm(omega)**2
     
     I = torch.tensor(([Ixx, 0, 0], [0, Iyy, 0], [0, 0, Izz]), 
                      dtype=torch.float32, device='cuda:0')
@@ -61,9 +61,11 @@ def _step(tensordict):
     new_q = torch.nn.functional.normalize(new_q, dim=0)
 
     if 2*np.arccos(sum(q.cpu()*q_d.cpu())) < np.pi/180: 
+        reward = -costs.view(*tensordict.shape, 1) + 50
+    elif 2*np.arccos(sum(q.cpu()*q_d.cpu())) < 5*np.pi/180: 
         reward = -costs.view(*tensordict.shape, 1) + 5
     else:
-        reward = -costs.view(*tensordict.shape, 1)
+        reward = -costs.view(*tensordict.shape, 1) - 5
     # done = torch.zeros_like(reward, dtype=torch.bool)
     done = torch.tensor([True], device='cuda:0') if norm(omega) > 2 else torch.tensor([False], device='cuda:0') 
 
@@ -192,11 +194,11 @@ def gen_params(batch_size=None) -> TensorDictBase:
                 {
                     "max_q": 1,
                     "max_q_dot": 2,
-                    "max_omega": 0.5,
-                    "max_moment": 0.05,
-                    "a_1": 0.1,
-                    "a_2": 0.1,
-                    "a_3": 0.1,
+                    "max_omega": 2,
+                    "max_moment": 0.5,
+                    "a_1": 1,
+                    "a_2": 1,
+                    "a_3": 1,
                     "Ixx": 30,
                     "Iyy": 30,
                     "Izz": 10,
